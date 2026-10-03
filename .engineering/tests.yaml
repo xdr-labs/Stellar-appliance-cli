@@ -3,6 +3,12 @@ version: 1
 setup_command: ""
 
 paths:
+  "appliance_cli.py":
+    domains:
+      - "core"
+  "setup.py":
+    domains:
+      - "core"
   "tests/**":
     domains:
       - "core"
@@ -10,11 +16,11 @@ paths:
 scenarios:
   - id: ADOPTED-TEST-001
     cost: medium
-    estimated_seconds: 180
-    timeout_seconds: 600
+    estimated_seconds: 2
+    timeout_seconds: 60
     agent_default: true
     scope: integration
-    name: Project-native affected tests
+    name: Complete native appliance CLI regression suite
     level: integration
     domains:
       - "core"
@@ -22,9 +28,9 @@ scenarios:
       - affected
     platforms:
       - "linux"
-    command: "python3 -m unittest discover -s tests -p 'test_ntpsec.py' -v"
+    command: "python3 -m unittest discover -s tests -v"
     invariants:
-      - "project-native tests remain green for affected changes"
+      - "management-network and NTPsec regressions remain green"
     release_gate: true
 
   - id: ADOPTED-STATIC-001
