@@ -12,10 +12,11 @@ artifact_hash_command: ''
 provenance_command: ''
 sbom_command: ''
 operational_e2e_required: true
-operational_e2e_command: 'bash -lc "printf ''show version\nshow hostname\nshow ntp\nquit\n'' | aella_cli"'
+operational_e2e_command: bash -lc "printf 'show version\nshow hostname\nshow ntp\nquit\n'
+  | aella_cli"
 full_e2e_passes: 1
 public_smoke_required: true
-public_smoke_command: 'bash -lc "printf ''help\nquit\n'' | aella_cli"'
+public_smoke_command: bash -lc "printf 'help\nquit\n' | aella_cli"
 human_equivalent_user_tests_required: true
 human_equivalent_user_tests:
   executor: EXECUTION_PROFILE
@@ -32,6 +33,12 @@ human_equivalent_user_tests:
     mandatory: true
     contract: docs/ENGINEERING_FULL_USER_E2E.md
     minimum_passes: 1
+  contract_version: 2
+  direct_persona_execution_required: true
+  finding_accumulation_before_remediation: true
+  same_head_quality_closure_required: true
+  candidate_freeze_after_quality_closure: true
+  evidence_validator: tools/user_acceptance_contract.py
 blockers:
   p0: true
   p1: true
