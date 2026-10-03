@@ -200,6 +200,8 @@ class ManagementNetworkTests(unittest.TestCase):
             mock.Mock(returncode=0, stdout="", stderr=""),
             mock.Mock(returncode=0, stdout="inet 10.0.0.2/24", stderr=""),
             mock.Mock(returncode=0, stdout="default via 10.0.0.1 dev mgt", stderr=""),
+            mock.Mock(returncode=0, stdout="inet 10.0.0.2/24", stderr=""),
+            mock.Mock(returncode=0, stdout="default via 10.0.0.1 dev mgt", stderr=""),
         ]
         with mock.patch.object(module.subprocess, "run", side_effect=results) as run:
             self.assertTrue(self.cli._restart_mgt_interface())
@@ -330,6 +332,8 @@ class ManagementNetworkTests(unittest.TestCase):
             mock.Mock(returncode=0, stdout="", stderr=""),
             mock.Mock(returncode=0, stdout="", stderr=""),
             mock.Mock(returncode=0, stdout="", stderr=""),
+            mock.Mock(returncode=0, stdout="inet 10.0.0.2/24", stderr=""),
+            mock.Mock(returncode=0, stdout="default via 10.0.0.1 dev mgt", stderr=""),
             mock.Mock(returncode=0, stdout="inet 10.0.0.2/24", stderr=""),
             mock.Mock(returncode=0, stdout="default via 10.0.0.1 dev mgt", stderr=""),
         ]
@@ -629,7 +633,7 @@ class ManagementNetworkTests(unittest.TestCase):
             ][:failed_index + 1]
             self.assertEqual([call.args[0] for call in run.call_args_list], expected)
 
-    def test_45_restart_rejects_stale_runtime_address_and_gateway(self):
+    def test_45_restart_converges_stale_address_and_rejects_stale_gateway(self):
         without = BASE.replace("    address 10.0.0.2\n", "").replace(
             "    netmask 255.255.255.0\n", ""
         ).replace("    gateway 10.0.0.1\n", "")
@@ -640,9 +644,16 @@ class ManagementNetworkTests(unittest.TestCase):
             side_effect=common + [
                 mock.Mock(returncode=0, stdout="inet 10.0.0.2/24", stderr=""),
                 mock.Mock(returncode=0, stdout="", stderr=""),
+                mock.Mock(returncode=0, stdout="", stderr=""),
+                mock.Mock(returncode=0, stdout="", stderr=""),
+                mock.Mock(returncode=0, stdout="", stderr=""),
             ],
-        ):
-            self.assertFalse(self.cli._restart_mgt_interface())
+        ) as run:
+            self.assertTrue(self.cli._restart_mgt_interface())
+        self.assertIn(
+            ["sudo", "ip", "-4", "addr", "del", "10.0.0.2/24", "dev", "mgt"],
+            [call.args[0] for call in run.call_args_list],
+        )
         with mock.patch.object(
             module.subprocess, "run",
             side_effect=common + [
@@ -656,13 +667,24 @@ class ManagementNetworkTests(unittest.TestCase):
             side_effect=common + [
                 mock.Mock(returncode=0, stdout="", stderr=""),
                 mock.Mock(returncode=0, stdout="", stderr=""),
+                mock.Mock(returncode=0, stdout="", stderr=""),
+                mock.Mock(returncode=0, stdout="", stderr=""),
             ],
         ):
             self.assertTrue(self.cli._restart_mgt_interface())
 
     def test_46_restart_verification_failure_rolls_back_transaction(self):
         before = self.canonical.read_text()
-        results = [mock.Mock(returncode=0, stdout="", stderr="") for _ in range(3)] + [
+        results = [
+            mock.Mock(returncode=0, stdout="", stderr=""),
+            mock.Mock(returncode=0, stdout="", stderr=""),
+            mock.Mock(returncode=0, stdout="", stderr=""),
+            mock.Mock(returncode=0, stdout="inet 10.0.0.2/24", stderr=""),
+            mock.Mock(returncode=0, stdout="", stderr=""),
+            mock.Mock(returncode=0, stdout="", stderr=""),
+            mock.Mock(returncode=0, stdout="", stderr=""),
+            mock.Mock(returncode=0, stdout="inet 10.0.0.2/24", stderr=""),
+            mock.Mock(returncode=0, stdout="default via 10.0.0.1 dev mgt", stderr=""),
             mock.Mock(returncode=0, stdout="inet 10.0.0.2/24", stderr=""),
             mock.Mock(returncode=0, stdout="default via 10.0.0.1 dev mgt", stderr=""),
         ]
